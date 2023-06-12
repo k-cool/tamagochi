@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { PetService } from './pet.service';
 import { CreatePetDTO } from './dto/create-pet.dto';
 import { Pet } from './schema/pet.schema';
@@ -15,5 +15,11 @@ export class PetController {
   @Get()
   async getPet(): Promise<Pet[]> {
     return await this.petService.getPetList();
+  }
+
+  @Get('/feed/:id')
+  async feedPet(@Param('id') petId: string): Promise<void> {
+    console.log(petId);
+    return await this.petService.feedPet(petId);
   }
 }

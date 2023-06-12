@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { v4 as uuid } from 'uuid';
-import { Status, StatusSchema } from './status.schema';
+import { Status } from './status.schema';
 
 export type PetDocument = mongoose.HydratedDocument<Pet>;
 
@@ -12,6 +12,9 @@ export class Pet {
 
   @Prop({ type: String, required: true })
   name: string;
+
+  @Prop({ type: Date, default: new Date() })
+  lastFeed: Date;
 
   @Prop({ type: String, default: uuid, ref: 'Status' })
   status: Status;

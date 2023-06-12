@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Pet } from './schema/pet.schema';
 import { Stage } from './types/status.type';
 import { Status } from './schema/status.schema';
+import { SATIETY } from './constant';
 
 @Injectable()
 export class PetService {
@@ -28,7 +29,30 @@ export class PetService {
     return await this.petModel.find().populate('status');
   }
 
-  @Cron('*/5 * * * * *', {})
+  async feedPet(petId: string): Promise<void> {
+    const { status } = await this.petModel
+      .findOne({ _id: petId })
+      .populate('status');
+
+    if (status.stage === '알' || status.stage === '사망') return;
+
+    const satiety =
+      status.satiety + SATIETY.SATIETY_PER_FEED > SATIETY.MAX_SATIETY
+        ? SATIETY.MAX_SATIETY
+        : status.satiety + SATIETY.SATIETY_PER_FEED;
+
+    await this.statusModel.updateOne(
+      { _id: status._id },
+      { $set: { satiety } },
+      { runValidators: true },
+    );
+    await this.petModel.updateOne(
+      { _id: petId },
+      { $set: { lastFeed: new Date() } },
+    );
+  }
+
+  @Cron('*/30 * * * * *', {})
   async checkGrowth() {
     const statusList = await this.statusModel.find();
 
@@ -38,6 +62,22 @@ export class PetService {
       await this.statusModel.updateOne(
         { _id: status._id },
         { $set: { stage: this.grow(status.stage) } },
+      );
+    });
+
+    await Promise.all(promises);
+  }
+
+  @Cron('*/5 * * * * *', {})
+  async checkSatiety() {
+    const statusList = await this.statusModel.find();
+
+    const promises = statusList.map(async (status) => {
+      if (status.stage === '사망' || status.stage === '알') return;
+
+      await this.statusModel.updateOne(
+        { _id: status._id },
+        { $inc: { satiety: -1 } },
       );
     });
 
