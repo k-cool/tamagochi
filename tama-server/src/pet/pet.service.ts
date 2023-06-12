@@ -1,39 +1,50 @@
 import { Model } from 'mongoose';
-import { Injectable, Inject } from '@nestjs/common';
-import { Pet } from './pet.type';
+import { Injectable } from '@nestjs/common';
 import { CreatePetDTO } from './dto/create-pet.dto';
 import { Cron } from '@nestjs/schedule';
-import { GrowthStage } from 'src/types/status.type';
+import { InjectModel } from '@nestjs/mongoose';
+import { Pet } from './schema/pet.schema';
+import { Stage } from './types/status.type';
+import { Status } from './schema/status.schema';
 
 @Injectable()
 export class PetService {
   constructor(
-    @Inject('PET_MODEL')
-    private petModel: Model<Pet>,
+    @InjectModel(Pet.name) private petModel: Model<Pet>,
+    @InjectModel(Status.name) private statusModel: Model<Status>,
   ) {}
 
   async createPet(createPetDTO: CreatePetDTO): Promise<Pet> {
     const { name } = createPetDTO;
-    const pet = new this.petModel({ name, growthStage: '알' });
+
+    const status = new this.statusModel();
+    await status.save();
+
+    const pet = new this.petModel({ name, status: status._id });
     return await pet.save();
   }
 
-  async getPet(): Promise<Pet[]> {
-    return this.petModel.find().exec();
+  async getPetList(): Promise<Pet[]> {
+    return await this.petModel.find().populate('status');
   }
 
   @Cron('*/5 * * * * *', {})
   async checkGrowth() {
-    const [pet] = await this.getPet();
-    console.log('before', pet);
+    const statusList = await this.statusModel.find();
 
-    await this.petModel.updateOne(
-      { _id: pet._id },
-      { growthStage: this.grow(pet.growthStage) },
-    );
+    const promises = statusList.map(async (status) => {
+      if (status.stage === '사망') return;
+
+      await this.statusModel.updateOne(
+        { _id: status._id },
+        { $set: { stage: this.grow(status.stage) } },
+      );
+    });
+
+    await Promise.all(promises);
   }
 
-  grow(current: GrowthStage): GrowthStage {
+  grow(current: Stage): Stage {
     switch (current) {
       case '알':
         return '유년기';
