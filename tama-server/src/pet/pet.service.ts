@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Pet } from './schema/pet.schema';
 import { Stage } from './types/status.type';
 import { Status } from './schema/status.schema';
-import { SATIETY } from './constant';
+import { CLEANLINESS, SATIETY } from './constant';
 
 @Injectable()
 export class PetService {
@@ -52,6 +52,26 @@ export class PetService {
     );
   }
 
+  async cleanPet(petId: string): Promise<void> {
+    const { status } = await this.petModel
+      .findOne({ _id: petId })
+      .populate('status');
+
+    if (status.stage === '알' || status.stage === '사망') return;
+
+    const cleanliness =
+      status.cleanliness + CLEANLINESS.CLEANLINESS_PER_FEED >
+      CLEANLINESS.MAX_CLEANLINESS
+        ? CLEANLINESS.MAX_CLEANLINESS
+        : status.cleanliness + CLEANLINESS.CLEANLINESS_PER_FEED;
+
+    await this.statusModel.updateOne(
+      { _id: status._id },
+      { $set: { cleanliness } },
+      { runValidators: true },
+    );
+  }
+
   @Cron('*/30 * * * * *', {})
   async checkGrowth() {
     const statusList = await this.statusModel.find();
@@ -77,7 +97,7 @@ export class PetService {
 
       await this.statusModel.updateOne(
         { _id: status._id },
-        { $inc: { satiety: -1 } },
+        { $inc: { satiety: -1, cleanliness: -1 } },
       );
     });
 

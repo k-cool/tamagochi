@@ -28,6 +28,14 @@ export class Status {
     max: SATIETY.MAX_SATIETY,
   })
   satiety: number;
+
+  @Prop({
+    type: Number,
+    default: SATIETY.DEFAULT_SATIETY,
+    min: SATIETY.MIN_SATIETY,
+    max: SATIETY.MAX_SATIETY,
+  })
+  cleanliness: number;
 }
 
 export const StatusSchema = SchemaFactory.createForClass(Status);
