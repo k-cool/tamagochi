@@ -4,6 +4,7 @@ import { PetModule } from './pet/pet.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
 //import { Pet, PetSchema } from './pet/schema/pet.schema';
+import { TranslateModule } from './translate/translate.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     // ]),
     ScheduleModule.forRoot(),
     PetModule,
+    TranslateModule,
   ],
 })
 export class AppModule {}
