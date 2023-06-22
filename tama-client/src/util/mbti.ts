@@ -1,4 +1,4 @@
-import { MBTI } from "@/types/status.type";
+import { MBTI } from "@/types/dusty.type";
 
 export const getFaceColor = (mbti: MBTI) => {
   const { ns, ft, pj } = mbti;
@@ -25,4 +25,13 @@ export const getEyeColor = (rgbStr: string) => {
 
   // 밝기가 임계값보다 작으면 폰트는 흰색, 그렇지 않으면 검은색을 반환합니다.
   return brightness < brightnessThreshold ? "#FFFFFF" : "#000000";
+};
+
+export const getMBTI = (mbti: MBTI) => {
+  const { ie, ns, ft, pj } = mbti;
+  const ieStr = ie < 50 ? "I" : "E";
+  const nsStr = ns < 50 ? "N" : "S";
+  const ftStr = ft < 50 ? "F" : "T";
+  const pjStr = pj < 50 ? "P" : "J";
+  return `${ieStr}${nsStr}${ftStr}${pjStr}`;
 };

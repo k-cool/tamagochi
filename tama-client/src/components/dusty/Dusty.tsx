@@ -1,16 +1,15 @@
 "use client";
 
 import { useDidmountEffect } from "@/hooks/useDidMountEffect";
-import { DustyStatus, MBTI } from "@/types/status.type";
+import { DustyData, MBTI } from "@/types/dusty.type";
 import { getEyeColor } from "@/util/mbti";
 import { useEffect, useState } from "react";
 
 export interface DustyProps {
-  status: DustyStatus;
-  suppriseSwitch: boolean;
+  status: DustyData;
 }
 
-export default function Dusty({ status, suppriseSwitch }: DustyProps) {
+export default function Dusty({ status }: DustyProps) {
   const { name, size, mbti } = status;
 
   const [dustySize, setDustySize] = useState(getDustySize(size));
@@ -18,20 +17,6 @@ export default function Dusty({ status, suppriseSwitch }: DustyProps) {
 
   const faceColor = getBackgroundColor(mbti);
   const eyeColor = getEyeColor(faceColor);
-
-  useDidmountEffect(() => {
-    setDustySize((prev) => ({
-      ...prev,
-      eyeScale: 1.2,
-    }));
-
-    setTimeout(() => {
-      setDustySize((prev) => ({
-        ...prev,
-        eyeScale: 1,
-      }));
-    }, 200);
-  }, [suppriseSwitch]);
 
   const handleMouseDown = () => {
     setDustySize((prev) => ({ ...prev, totalScale: 1.2 }));
@@ -46,7 +31,7 @@ export default function Dusty({ status, suppriseSwitch }: DustyProps) {
       className="flex flex-col justify-center items-center"
       style={{ gap: `${dustySize.betweenNameAndFace}rem` }}
     >
-      <p className="text-white">{name}</p>
+      {/* <p className="text-white">{name}</p> */}
       <div
         className="hover:border-4 hover:border-white"
         style={{

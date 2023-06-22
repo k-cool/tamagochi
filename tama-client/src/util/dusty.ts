@@ -1,1 +1,1 @@
-import { DustySize } from "@/types/status.type";
+import { DustySize } from "@/types/dusty.type";

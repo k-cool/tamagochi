@@ -1,4 +1,4 @@
-import { GrowthStage } from "./status.type";
+import { GrowthStage } from "./dusty.type";
 
 export interface Pet {
   _id?: string;
