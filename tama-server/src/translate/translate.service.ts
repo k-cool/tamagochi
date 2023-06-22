@@ -7,7 +7,7 @@ export class TranslateService {
   private readonly client_secret = process.env.PAPAGO_CLIENT_SECRET;
 
   async translate(query: string): Promise<string> {
-    console.log(query)
+    console.log(query);
     const api_url = 'https://openapi.naver.com/v1/papago/n2mt';
     const options = {
       headers: {
