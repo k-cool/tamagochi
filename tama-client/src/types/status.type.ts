@@ -1,1 +1,13 @@
-export type GrowthStage = "알" | "유년기" | "청소년기" | "성년기" | "사망";
+export type DustyStatus = {
+  name: string;
+  age: number;
+  size: number;
+  mbti: {
+    ie: number;
+    ns: number;
+    ft: number;
+    pj: number;
+  };
+};
+
+export type MBTI = DustyStatus["mbti"];
