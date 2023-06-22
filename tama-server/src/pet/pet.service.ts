@@ -4,43 +4,52 @@ import { CreatePetDTO } from './dto/create-pet.dto';
 import { Cron } from '@nestjs/schedule';
 import { InjectModel } from '@nestjs/mongoose';
 import { Pet } from './schema/pet.schema';
-import { Stage } from './types/status.type';
 import { Status } from './schema/status.schema';
-import { CLEANLINESS, SATIETY } from './constant';
+import { CLEANLINESS, MBTIENUM, SATIETY } from './constant';
+import { UpdateMBTIDto } from './dto/update-mbti.dto';
+import { MBTI } from './schema/mbti.schema';
 
 @Injectable()
 export class PetService {
   constructor(
     @InjectModel(Pet.name) private petModel: Model<Pet>,
     @InjectModel(Status.name) private statusModel: Model<Status>,
-  ) {}
-
+    @InjectModel(MBTI.name) private mbtiModel: Model<MBTI>,
+  ) { }
+  
+  //pet 생성
   async createPet(createPetDTO: CreatePetDTO): Promise<Pet> {
     const { name } = createPetDTO;
 
     const status = new this.statusModel();
     await status.save();
 
-    const pet = new this.petModel({ name, status: status._id });
+    const mbti = new this.mbtiModel();
+    await mbti.save();
+
+    const pet = new this.petModel({ name, status: status._id, mbti: mbti._id });
     return await pet.save();
   }
 
+  //pet list 가져오기
   async getPetList(): Promise<Pet[]> {
-    return await this.petModel.find().populate('status');
+    return await this.petModel.find().populate('status').populate('mbti');
   }
 
-  async feedPet(petId: string): Promise<void> {
+  // petId로 pet 상태 가져오기
+  async getPetStatus(petId: string): Promise<Status> {
     const { status } = await this.petModel
       .findOne({ _id: petId })
       .populate('status');
+      console.log(status)
+    return status;
+  }
 
-    if (status.stage === '알' || status.stage === '사망') return;
+  //pet 먹이 주기
+  async feedPet(petId: string): Promise<void> {
+    const status = await this.getPetStatus(petId);
 
-    const satiety =
-      status.satiety + SATIETY.SATIETY_PER_FEED > SATIETY.MAX_SATIETY
-        ? SATIETY.MAX_SATIETY
-        : status.satiety + SATIETY.SATIETY_PER_FEED;
-
+    const satiety = SATIETY.SATIETY_SET_FEED; //100 (하루에 한번으로 먹이 주기를 제한하므로 한번 주면 100으로 설정하도록 바꿈)
     await this.statusModel.updateOne(
       { _id: status._id },
       { $set: { satiety } },
@@ -52,16 +61,33 @@ export class PetService {
     );
   }
 
-  async cleanPet(petId: string): Promise<void> {
-    const { status } = await this.petModel
-      .findOne({ _id: petId })
-      .populate('status');
+  async updateMBTI(updateMBTIDto : UpdateMBTIDto): Promise<void> {
+    const status = await this.getPetStatus(updateMBTIDto.petId);
+    const MBTIType = updateMBTIDto.MBTIType;
+    const calculatedData = status[MBTIType] + Number(updateMBTIDto.variableValue);
+    
+    let changed : number;
+    if(calculatedData > 100){
+      changed = 100;
+    }else if(calculatedData <0){
+      changed = 0;
+    }else{
+      changed = calculatedData
+    }
+    await this.statusModel.updateOne(
+      { _id: status._id },
+      { $set:  {[MBTIType] : changed} },
+      { runValidators: true },
+    );
+  }
 
-    if (status.stage === '알' || status.stage === '사망') return;
+  // 펫 씻기기
+  async cleanPet(petId: string): Promise<void> {
+    const status = await this.getPetStatus(petId);
 
     const cleanliness =
       status.cleanliness + CLEANLINESS.CLEANLINESS_PER_FEED >
-      CLEANLINESS.MAX_CLEANLINESS
+        CLEANLINESS.MAX_CLEANLINESS
         ? CLEANLINESS.MAX_CLEANLINESS
         : status.cleanliness + CLEANLINESS.CLEANLINESS_PER_FEED;
 
@@ -72,52 +98,47 @@ export class PetService {
     );
   }
 
-  @Cron('*/30 * * * * *', {})
-  async checkGrowth() {
+  // 펫 나이 증가
+  @Cron('0 0 0 * * *', {})
+  async incPetAge() {
     const statusList = await this.statusModel.find();
 
     const promises = statusList.map(async (status) => {
-      if (status.stage === '사망') return;
-
       await this.statusModel.updateOne(
         { _id: status._id },
-        { $set: { stage: this.grow(status.stage) } },
+        { $inc: { age: +1 } },
       );
-    });
+    })
 
     await Promise.all(promises);
-  }
+  };
 
+  // 청결도, 배고픔 유지 => MBTI적용을 위해 다만 반복 시간은 추후 줄일 것
   @Cron('*/5 * * * * *', {})
   async checkSatiety() {
     const statusList = await this.statusModel.find();
 
     const promises = statusList.map(async (status) => {
-      if (status.stage === '사망' || status.stage === '알') return;
+      if (status.satiety > 0) {
+        await this.statusModel.updateOne(
+          { _id: status._id },
+          { $inc: { satiety: -1 } },
+        );
+      } else {
+        // 0으로 설정 => if문 배고픔 정도 조건 추후 점검
+      }
 
-      await this.statusModel.updateOne(
-        { _id: status._id },
-        { $inc: { satiety: -1, cleanliness: -1 } },
-      );
+      // 청결도 조건
+      if (status.cleanliness > 0) {
+        await this.statusModel.updateOne(
+          { _id: status._id },
+          { $inc: { cleanliness: -1 } },
+        );
+      } else {
+
+      }
     });
 
     await Promise.all(promises);
-  }
-
-  grow(current: Stage): Stage {
-    switch (current) {
-      case '알':
-        return '유년기';
-      case '유년기':
-        return '청소년기';
-      case '청소년기':
-        return '성년기';
-      case '성년기':
-        return '사망';
-      case '사망':
-        return '사망';
-      default:
-        return '알';
-    }
   }
 }

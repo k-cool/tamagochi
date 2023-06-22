@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PetModule } from './pet/pet.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
+//import { Pet, PetSchema } from './pet/schema/pet.schema';
 
 @Module({
   imports: [
@@ -15,6 +16,20 @@ import { MongooseModule } from '@nestjs/mongoose';
       pass: process.env.MONGO_PASSWORD,
       dbName: process.env.MONGO_DB,
     }),
+    // MongooseModule.forFeatureAsync([
+    //   {
+    //     name: Pet.name,
+    //     imports: [ConfigModule],
+    //     useFactory: (configService: ConfigService) => {
+    //       const schema = PetSchema;
+    //       schema.pre('save', function() {
+    //         console.log(`${configService.get('APP_NAME')}: Hello from pre save`);
+    //       });
+    //       return schema;
+    //     },
+    //     inject: [ConfigService],
+    //   },
+    // ]),
     ScheduleModule.forRoot(),
     PetModule,
   ],
