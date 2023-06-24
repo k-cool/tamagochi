@@ -41,7 +41,6 @@ export class PetService {
     const { status } = await this.petModel
       .findOne({ _id: petId })
       .populate('status');
-      console.log(status)
     return status;
   }
 

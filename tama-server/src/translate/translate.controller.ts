@@ -7,7 +7,6 @@ export class TranslateController {
 
   @Post()
   async translate(@Body('query') query: string): Promise<string> {
-    console.log(query);
     return this.translateService.translate(query);
   }
 }

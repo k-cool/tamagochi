@@ -1,18 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
 @Injectable()
 export class TranslateService {
-  private readonly client_id = process.env.PAPAGO_CLIENT_ID;
-  private readonly client_secret = process.env.PAPAGO_CLIENT_SECRET;
-
+  constructor(
+    private readonly config : ConfigService,
+    ) { }
+    
   async translate(query: string): Promise<string> {
-    console.log(query);
+    const papagoClientId = this.config.get('PAPAGO_CLIENT_ID');
+    const papagoClientSecret = this.config.get('PAPAGO_CLIENT_SECRET');
     const api_url = 'https://openapi.naver.com/v1/papago/n2mt';
     const options = {
       headers: {
-        'X-Naver-Client-Id': this.client_id,
-        'X-Naver-Client-Secret': this.client_secret,
+        'X-Naver-Client-Id': papagoClientId,
+        'X-Naver-Client-Secret': papagoClientSecret,
       },
     };
 

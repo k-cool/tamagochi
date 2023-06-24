@@ -24,13 +24,11 @@ export class PetController {
 
   @Get('/feed/:id')
   async feedPet(@Param('id', new ParseUUIDPipe()) petId: string): Promise<void> {
-    console.log(petId);
     return await this.petService.feedPet(petId);
   }
 
   @Get('/clean/:id')
   async cleanPet(@Param('id', new ParseUUIDPipe()) petId: string): Promise<void> {
-    console.log(petId);
     return await this.petService.cleanPet(petId);
   }
 
