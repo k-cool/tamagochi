@@ -1,5 +1,6 @@
 import { MBTIType } from "../types/mbti.type";
-import { IsString, IsInt } from 'class-validator';
+import { IsString, IsNumber } from 'class-validator';
+import { Transform } from 'class-transformer';
 export class UpdateMBTIDto {
     @IsString()
     petId: string;
@@ -7,6 +8,7 @@ export class UpdateMBTIDto {
     @IsString()
     MBTIType: MBTIType;
 
-    @IsInt()
+    @IsNumber()
+    @Transform(({ value }) => parseInt(value))
     variableValue: number;
 }

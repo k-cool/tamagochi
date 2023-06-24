@@ -38,7 +38,7 @@ export class PetController {
   }
 
   @Post('/MBTI')
-  async updateMBTI(@Body(new ValidationPipe()) updateMBTIDto : UpdateMBTIDto): Promise<void>{
-    return await this.petService.updateMBTI(updateMBTIDto)
+  async updateMBTI(@Body(new ValidationPipe()) updateMBTIDto: UpdateMBTIDto): Promise<void> {
+    return await this.petService.updateMBTI(updateMBTIDto);
   }
 }

@@ -16,7 +16,7 @@ export class PetService {
     @InjectModel(Status.name) private statusModel: Model<Status>,
     @InjectModel(MBTI.name) private mbtiModel: Model<MBTI>,
   ) { }
-  
+
   //pet 생성
   async createPet(createPetDTO: CreatePetDTO): Promise<Pet> {
     const { name } = createPetDTO;
@@ -44,6 +44,13 @@ export class PetService {
     return status;
   }
 
+  async getPetMbti(petId: string): Promise<MBTI> {
+    const { mbti } = await this.petModel
+      .findOne({ _id: petId })
+      .populate('mbti');
+    return mbti;
+  }
+
   //pet 먹이 주기
   async feedPet(petId: string): Promise<void> {
     const status = await this.getPetStatus(petId);
@@ -60,39 +67,35 @@ export class PetService {
     );
   }
 
-  async updateMBTI(updateMBTIDto : UpdateMBTIDto): Promise<void> {
-    const status = await this.getPetStatus(updateMBTIDto.petId);
-    const MBTIType = updateMBTIDto.MBTIType;
-    const calculatedData = status[MBTIType] + Number(updateMBTIDto.variableValue);
-    
-    let changed : number;
-    if(calculatedData > 100){
-      changed = 100;
-    }else if(calculatedData <0){
-      changed = 0;
-    }else{
-      changed = calculatedData
-    }
-    await this.statusModel.updateOne(
-      { _id: status._id },
-      { $set:  {[MBTIType] : changed} },
-      { runValidators: true },
-    );
-  }
-
   // 펫 씻기기
   async cleanPet(petId: string): Promise<void> {
     const status = await this.getPetStatus(petId);
 
-    const cleanliness =
-      status.cleanliness + CLEANLINESS.CLEANLINESS_PER_FEED >
-        CLEANLINESS.MAX_CLEANLINESS
-        ? CLEANLINESS.MAX_CLEANLINESS
-        : status.cleanliness + CLEANLINESS.CLEANLINESS_PER_FEED;
+    const cleanliness = CLEANLINESS.CLEANLINESS_PER_CLEAN; //100
 
     await this.statusModel.updateOne(
       { _id: status._id },
       { $set: { cleanliness } },
+      { runValidators: true },
+    );
+  }
+
+  async updateMBTI(updateMBTIDto: UpdateMBTIDto): Promise<void> {
+    const mbti = await this.getPetMbti(updateMBTIDto.petId);
+    const MBTIType = updateMBTIDto.MBTIType;
+    const calculatedData = mbti[MBTIType] + Number(updateMBTIDto.variableValue);
+
+    let changed: number;
+    if (calculatedData > 100) {
+      changed = 100;
+    } else if (calculatedData < 0) {
+      changed = 0;
+    } else {
+      changed = calculatedData
+    }
+    await this.mbtiModel.updateOne(
+      { _id: mbti._id },
+      { $set: { [MBTIType]: changed } },
       { runValidators: true },
     );
   }
