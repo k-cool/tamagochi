@@ -33,4 +33,4 @@ import * as Joi from 'joi';
     ChatModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
