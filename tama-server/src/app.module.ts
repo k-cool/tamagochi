@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { PetModule } from './pet/pet.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TranslateModule } from './translate/translate.module';
+import { ChatModule } from './chat/chat.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -18,6 +19,7 @@ import * as Joi from 'joi';
         MONGO_PASSWORD: Joi.string().required(),
         PAPAGO_CLIENT_ID: Joi.string().required(),
         PAPAGO_CLIENT_SECRET: Joi.string().required(),
+        OPENAI_API_KEY: Joi.string().required(),
       }),
     }),
     MongooseModule.forRoot(`mongodb://${process.env.MONGO_HOST}`, {
@@ -28,6 +30,7 @@ import * as Joi from 'joi';
     ScheduleModule.forRoot(),
     PetModule,
     TranslateModule,
+    ChatModule,
   ],
 })
 export class AppModule { }
