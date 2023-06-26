@@ -19,16 +19,23 @@ export default function ChatInput({ name }: ChatInputProps) {
     setUserInput(() => value);
   };
 
+  const callApi = async () => {};
+
   const sendMessage = async () => {
+    // const result = await axios
+    //   .post("/api/chat", { query: userInput })
+    //   .then((res) => res.data)
+    //   .catch(console.error);
+    setUserInput(() => "");
+    dispatch(setShowChat(false));
+
     const result = await axios
-      .post("/api/chat", { query: userInput })
+      .post("/api/chat", { chatText: userInput })
       .then((res) => res.data)
       .catch(console.error);
 
-    dispatch(setShowChat(false));
     dispatch(setMessage(result));
     dispatch(setShowChat(true));
-    setUserInput(() => "");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
